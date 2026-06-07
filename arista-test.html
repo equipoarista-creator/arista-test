@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arista — Test de Personalidad</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #7F77DD;
+    --purple-light: #EEEDFE;
+    --purple-dark: #3C3489;
+    --burgundy: #993556;
+    --yellow: #EF9F27;
+    --text: #2C2C2A;
+    --text-muted: #5F5E5A;
+    --border: #D3D1C7;
+    --bg: #F8F7F4;
+    --white: #ffffff;
+    --radius: 12px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  .container {
+    width: 100%;
+    max-width: 680px;
+  }
+  .logo {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .logo-mark {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+    margin-bottom: 0.5rem;
+  }
+  .logo-path {
+    width: 6px;
+    border-radius: 3px;
+  }
+  .logo-path:nth-child(1) { height: 24px; background: var(--purple); }
+  .logo-path:nth-child(2) { height: 32px; background: var(--burgundy); }
+  .logo-path:nth-child(3) { height: 20px; background: var(--yellow); }
+  .logo-name {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--purple-dark);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Bienvenida */
+  .welcome-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--purple-dark);
+    margin-bottom: 0.75rem;
+  }
+  .welcome-text {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+  }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .form-group input:focus { border-color: var(--purple); }
+  .btn {
+    display: inline-block;
+    padding: 0.875rem 2rem;
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    width: 100%;
+  }
+  .btn:hover { background: var(--purple-dark); }
+  .btn:disabled { background: var(--border); cursor: not-allowed; }
+
+  /* Progreso */
+  .progress-wrap { margin-bottom: 1.5rem; }
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--purple);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  /* Preguntas */
+  .question-block { margin-bottom: 1.5rem; }
+  .question-text {
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  .q-num {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-right: 6px;
+  }
+  .scale {
+    display: flex;
+    gap: 8px;
+  }
+  .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    padding: 0 2px;
+  }
+  .scale label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .scale input[type="radio"] { display: none; }
+  .scale-btn {
+    width: 100%;
+    padding: 10px 4px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--bg);
+    transition: all 0.12s;
+    cursor: pointer;
+  }
+  .scale input[type="radio"]:checked + .scale-btn {
+    background: var(--purple-light);
+    border-color: var(--purple);
+    color: var(--purple-dark);
+    font-weight: 600;
+  }
+  .scale label:hover .scale-btn {
+    border-color: var(--purple);
+    color: var(--purple);
+  }
+  .nav-btns {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .btn-secondary {
+    flex: 1;
+    padding: 0.875rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--purple); color: var(--purple); }
+  .btn-next { flex: 2; }
+
+  /* Final */
+  .final-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--purple-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+  .final-icon svg { width: 32px; height: 32px; }
+  .final-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--purple-dark);
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .final-text {
+    font-size: 15px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.7;
+  }
+  .sending {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+  .error-msg {
+    background: #FCEBEB;
+    border: 1px solid #F09595;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 14px;
+    color: #A32D2D;
+    margin-top: 1rem;
+    display: none;
+  }
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2rem;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 1.25rem; }
+    .scale-btn { padding: 8px 2px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-path"></div>
+      <div class="logo-path"></div>
+      <div class="logo-path"></div>
+    </div>
+    <div class="logo-name">Arista</div>
+  </div>
+
+  <!-- PANTALLA 1: Bienvenida -->
+  <div id="screen-welcome" class="screen active">
+    <div class="card">
+      <h1 class="welcome-title">Test de personalidad</h1>
+      <p class="welcome-text">
+        Este cuestionario forma parte de nuestro proceso de acompañamiento profesional.
+        No hay respuestas correctas ni incorrectas — respondé con honestidad según cómo sos habitualmente.
+        Tarda aproximadamente <strong>15 minutos</strong>.
+      </p>
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="input-nombre" placeholder="Tu nombre" autocomplete="given-name">
+      </div>
+      <div class="form-group">
+        <label>Apellido</label>
+        <input type="text" id="input-apellido" placeholder="Tu apellido" autocomplete="family-name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="input-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <button class="btn" onclick="startTest()">Comenzar el test</button>
+      <div id="welcome-error" class="error-msg">Por favor completá todos los campos antes de continuar.</div>
+    </div>
+  </div>
+
+  <!-- PANTALLA 2: Preguntas -->
+  <div id="screen-test" class="screen">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="progress-text">Pregunta 1 de 120</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div id="questions-container"></div>
+      <div class="nav-btns">
+        <button class="btn-secondary" onclick="prevPage()" id="btn-prev">Anterior</button>
+        <button class="btn btn-next" onclick="nextPage()" id="btn-next">Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA 3: Enviando -->
+  <div id="screen-sending" class="screen">
+    <div class="card">
+      <div class="sending">
+        <p>Enviando tus respuestas...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA 4: Final -->
+  <div id="screen-final" class="screen">
+    <div class="card">
+      <div class="final-icon">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" stroke="#7F77DD" stroke-width="2"/>
+          <path d="M10 16.5l4 4 8-8" stroke="#7F77DD" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="final-title">¡Muchas gracias!</h2>
+      <p class="final-text">
+        Completaste el test correctamente.<br><br>
+        El equipo de Arista analizará tus resultados y se pondrá en contacto contigo a la brevedad.
+      </p>
+    </div>
+  </div>
+
+  <div class="footer">Arista · Consultoría de Desarrollo Profesional · Puerto Madryn, Patagonia</div>
+</div>
+
+<script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbycoSi8nBZMARYZUBZwkZWoN-_PJavJVKrNvBIpu-3SS4wntf0vMjhRgpnzX7z42Haevw/exec";
+
+// Preguntas IPIP-120 en español
+// Formato: [texto, factor(O/C/E/A/N), subfaceta(1-6), keyed(1=normal,-1=inversa)]
+const QUESTIONS = [
+  // APERTURA (O) — 6 subfacetas × 4 preguntas = 24
+  // O1: Imaginación
+  ["Tengo una imaginación vívida.",                           "O",1, 1],
+  ["Paso tiempo soñando despierto/a.",                       "O",1, 1],
+  ["No me gustan las discusiones teóricas o abstractas.",    "O",1,-1],
+  ["Me cuesta imaginar cosas.",                              "O",1,-1],
+  // O2: Intereses artísticos
+  ["Creo que la belleza del arte es importante.",            "O",2, 1],
+  ["Me gustan la música, el arte o la literatura.",          "O",2, 1],
+  ["No presto mucha atención al arte.",                      "O",2,-1],
+  ["La poesía me deja indiferente/a.",                       "O",2,-1],
+  // O3: Emotividad
+  ["Experimento emociones con intensidad.",                  "O",3, 1],
+  ["Me involucro emocionalmente con causas y personas.",     "O",3, 1],
+  ["Rara vez me emociono.",                                  "O",3,-1],
+  ["Soy una persona poco emotiva.",                         "O",3,-1],
+  // O4: Aventura
+  ["Me gusta probar cosas nuevas.",                          "O",4, 1],
+  ["Disfruto de nuevas y diferentes actividades.",           "O",4, 1],
+  ["Prefiero la rutina a la novedad.",                       "O",4,-1],
+  ["Me gusta la previsibilidad.",                            "O",4,-1],
+  // O5: Intelecto
+  ["Disfruto reflexionando sobre ideas complejas.",          "O",5, 1],
+  ["Me gusta resolver puzzles y acertijos difíciles.",       "O",5, 1],
+  ["No me interesan las discusiones filosóficas.",           "O",5,-1],
+  ["Evito los temas abstractos.",                            "O",5,-1],
+  // O6: Liberalismo
+  ["Creo que debemos cuestionar la autoridad.",              "O",6, 1],
+  ["Me gustan los enfoques poco convencionales.",            "O",6, 1],
+  ["Prefiero lo tradicional a lo experimental.",             "O",6,-1],
+  ["Respeto las normas establecidas.",                       "O",6,-1],
+
+  // RESPONSABILIDAD (C) — 6 subfacetas × 4 preguntas = 24
+  // C1: Autoeficacia
+  ["Soy capaz de manejar situaciones difíciles.",            "C",1, 1],
+  ["Sé que puedo lograr lo que me propongo.",                "C",1, 1],
+  ["A menudo me siento incompetente.",                       "C",1,-1],
+  ["Dudo de mis propias capacidades.",                       "C",1,-1],
+  // C2: Orden
+  ["Me gusta el orden y la organización.",                   "C",2, 1],
+  ["Siempre mantengo mis cosas en su lugar.",                "C",2, 1],
+  ["Suelo dejar mis cosas desordenadas.",                    "C",2,-1],
+  ["El desorden no me molesta.",                             "C",2,-1],
+  // C3: Sentido del deber
+  ["Cumplo con mis obligaciones.",                           "C",3, 1],
+  ["Hago lo que dije que iba a hacer.",                      "C",3, 1],
+  ["A veces no cumplo mis compromisos.",                     "C",3,-1],
+  ["Me resulta fácil evadir responsabilidades.",             "C",3,-1],
+  // C4: Orientación al logro
+  ["Me esfuerzo al máximo en todo lo que hago.",             "C",4, 1],
+  ["Trabajo duro para alcanzar mis metas.",                  "C",4, 1],
+  ["Hago lo mínimo indispensable.",                          "C",4,-1],
+  ["No me esfuerzo más de lo necesario.",                    "C",4,-1],
+  // C5: Autodisciplina
+  ["Termino lo que empiezo.",                                "C",5, 1],
+  ["Me mantengo enfocado/a en mis tareas.",                  "C",5, 1],
+  ["Me cuesta mantener la atención en una tarea.",           "C",5,-1],
+  ["Abandono las tareas a mitad de camino.",                 "C",5,-1],
+  // C6: Cautela
+  ["Pienso antes de actuar.",                                "C",6, 1],
+  ["Me tomo tiempo para tomar decisiones.",                  "C",6, 1],
+  ["Actúo sin pensar en las consecuencias.",                 "C",6,-1],
+  ["Tomo decisiones impulsivas.",                            "C",6,-1],
+
+  // EXTRAVERSIÓN (E) — 6 subfacetas × 4 preguntas = 24
+  // E1: Amabilidad social
+  ["Me resulta fácil conocer gente nueva.",                  "E",1, 1],
+  ["Soy bueno/a para iniciar conversaciones.",               "E",1, 1],
+  ["Me cuesta hablar con personas que no conozco.",          "E",1,-1],
+  ["Me siento incómodo/a en situaciones sociales nuevas.",   "E",1,-1],
+  // E2: Gregarismo
+  ["Disfruto estar rodeado/a de gente.",                     "E",2, 1],
+  ["Prefiero reuniones grandes a encuentros íntimos.",       "E",2, 1],
+  ["Prefiero estar solo/a que acompañado/a.",               "E",2,-1],
+  ["Las multitudes me agotan.",                              "E",2,-1],
+  // E3: Asertividad
+  ["Tomo el liderazgo en los grupos.",                       "E",3, 1],
+  ["Me resulta fácil expresar mis opiniones.",               "E",3, 1],
+  ["Prefiero no llamar la atención.",                        "E",3,-1],
+  ["Evito ser el centro de atención.",                       "E",3,-1],
+  // E4: Nivel de actividad
+  ["Siempre estoy en movimiento.",                           "E",4, 1],
+  ["Tengo mucha energía.",                                   "E",4, 1],
+  ["Me canso fácilmente.",                                   "E",4,-1],
+  ["Prefiero las actividades tranquilas y pausadas.",        "E",4,-1],
+  // E5: Búsqueda de emociones
+  ["Me gustan las actividades emocionantes.",                "E",5, 1],
+  ["Busco situaciones que me generen adrenalina.",           "E",5, 1],
+  ["Evito las situaciones de riesgo.",                       "E",5,-1],
+  ["Prefiero la seguridad a la aventura.",                   "E",5,-1],
+  // E6: Emociones positivas
+  ["Soy una persona alegre.",                                "E",6, 1],
+  ["Me río con facilidad.",                                  "E",6, 1],
+  ["Rara vez me siento contento/a.",                         "E",6,-1],
+  ["No soy una persona muy jovial.",                         "E",6,-1],
+
+  // AMABILIDAD (A) — 6 subfacetas × 4 preguntas = 24
+  // A1: Confianza
+  ["Creo que la gente tiene buenas intenciones.",            "A",1, 1],
+  ["Confío en los demás fácilmente.",                        "A",1, 1],
+  ["Desconfío de las personas que conozco.",                 "A",1,-1],
+  ["Me resulta difícil confiar en los demás.",               "A",1,-1],
+  // A2: Moralidad
+  ["No me gusta engañar a los demás.",                       "A",2, 1],
+  ["Soy una persona honesta.",                               "A",2, 1],
+  ["A veces manipulo a otros para conseguir lo que quiero.", "A",2,-1],
+  ["No tengo problema en mentir si es necesario.",           "A",2,-1],
+  // A3: Altruismo
+  ["Me importa el bienestar de los demás.",                  "A",3, 1],
+  ["Disfruto ayudar a las personas.",                        "A",3, 1],
+  ["Me preocupo poco por los problemas ajenos.",             "A",3,-1],
+  ["Antepongo mis intereses a los de los demás.",            "A",3,-1],
+  // A4: Cooperación
+  ["Prefiero colaborar antes que competir.",                 "A",4, 1],
+  ["Evito los conflictos.",                                  "A",4, 1],
+  ["Me gusta ganar discusiones.",                            "A",4,-1],
+  ["No me molesta el conflicto.",                            "A",4,-1],
+  // A5: Modestia
+  ["No me gusta presumir de mis logros.",                    "A",5, 1],
+  ["Soy una persona humilde.",                               "A",5, 1],
+  ["Creo que soy mejor que la mayoría de las personas.",     "A",5,-1],
+  ["Me gusta que los demás sepan de mis éxitos.",            "A",5,-1],
+  // A6: Simpatía
+  ["Me afecta el sufrimiento ajeno.",                        "A",6, 1],
+  ["Tengo empatía hacia las personas.",                      "A",6, 1],
+  ["No me afectan demasiado los problemas de los demás.",    "A",6,-1],
+  ["Soy una persona poco sensible.",                         "A",6,-1],
+
+  // NEUROTICISMO (N) — 6 subfacetas × 4 preguntas = 24
+  // N1: Ansiedad
+  ["Me preocupo con frecuencia.",                            "N",1, 1],
+  ["Siento ansiedad ante situaciones inciertas.",            "N",1, 1],
+  ["Rara vez me siento ansioso/a.",                          "N",1,-1],
+  ["Soy una persona tranquila.",                             "N",1,-1],
+  // N2: Hostilidad
+  ["Me irrito con facilidad.",                               "N",2, 1],
+  ["Pierdo la paciencia fácilmente.",                        "N",2, 1],
+  ["Rara vez me enojo.",                                     "N",2,-1],
+  ["Soy paciente con los demás.",                            "N",2,-1],
+  // N3: Depresión
+  ["A veces me siento triste sin razón aparente.",           "N",3, 1],
+  ["Me cuesta mantener el ánimo alto.",                      "N",3, 1],
+  ["Rara vez me siento decaído/a.",                          "N",3,-1],
+  ["Soy una persona de buen humor en general.",              "N",3,-1],
+  // N4: Timidez social
+  ["Me siento incómodo/a cuando soy el centro de atención.", "N",4, 1],
+  ["Me pongo nervioso/a en situaciones sociales.",           "N",4, 1],
+  ["No me incomoda hablar en público.",                      "N",4,-1],
+  ["Me siento cómodo/a en situaciones sociales.",            "N",4,-1],
+  // N5: Impulsividad
+  ["Hago cosas de las que me arrepiento después.",           "N",5, 1],
+  ["Me cuesta resistir las tentaciones.",                    "N",5, 1],
+  ["Raramente actúo de forma impulsiva.",                    "N",5,-1],
+  ["Tengo buen autocontrol.",                                "N",5,-1],
+  // N6: Vulnerabilidad
+  ["Me derrumbo bajo presión.",                              "N",6, 1],
+  ["Cuando estoy estresado/a, me resulta difícil funcionar.","N",6, 1],
+  ["Manejo bien el estrés.",                                 "N",6,-1],
+  ["Bajo presión, me mantengo sereno/a.",                    "N",6,-1],
+];
+
+const QUESTIONS_PER_PAGE = 5;
+let currentPage = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+let userData = {};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startTest() {
+  const nombre = document.getElementById('input-nombre').value.trim();
+  const apellido = document.getElementById('input-apellido').value.trim();
+  const email = document.getElementById('input-email').value.trim();
+  const err = document.getElementById('welcome-error');
+
+  if (!nombre || !apellido || !email || !email.includes('@')) {
+    err.style.display = 'block';
+    return;
+  }
+  err.style.display = 'none';
+  userData = { nombre, apellido, email };
+  currentPage = 0;
+  renderPage();
+  showScreen('screen-test');
+}
+
+function renderPage() {
+  const start = currentPage * QUESTIONS_PER_PAGE;
+  const end = Math.min(start + QUESTIONS_PER_PAGE, QUESTIONS.length);
+  const total = QUESTIONS.length;
+  const pct = Math.round((start / total) * 100);
+
+  document.getElementById('progress-text').textContent = `Pregunta ${start + 1} de ${total}`;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+
+  for (let i = start; i < end; i++) {
+    const q = QUESTIONS[i];
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    block.innerHTML = `
+      <div class="question-text">
+        <span class="q-num">${i + 1}.</span>${q[0]}
+      </div>
+      <div class="scale">
+        ${[1,2,3,4,5].map(v => `
+          <label>
+            <input type="radio" name="q${i}" value="${v}" ${answers[i] === v ? 'checked' : ''} onchange="answers[${i}] = ${v}">
+            <div class="scale-btn">${v}</div>
+          </label>
+        `).join('')}
+      </div>
+      <div class="scale-labels">
+        <span>Muy en desacuerdo</span>
+        <span>Muy de acuerdo</span>
+      </div>
+    `;
+    container.appendChild(block);
+  }
+
+  document.getElementById('btn-prev').style.visibility = currentPage === 0 ? 'hidden' : 'visible';
+  const isLast = end >= QUESTIONS.length;
+  document.getElementById('btn-next').textContent = isLast ? 'Finalizar' : 'Siguiente';
+}
+
+function prevPage() {
+  if (currentPage > 0) {
+    currentPage--;
+    renderPage();
+  }
+}
+
+function nextPage() {
+  const start = currentPage * QUESTIONS_PER_PAGE;
+  const end = Math.min(start + QUESTIONS_PER_PAGE, QUESTIONS.length);
+
+  for (let i = start; i < end; i++) {
+    if (answers[i] === null) {
+      alert('Por favor respondé todas las preguntas de esta página antes de continuar.');
+      return;
+    }
+  }
+
+  if (end >= QUESTIONS.length) {
+    submitResults();
+  } else {
+    currentPage++;
+    renderPage();
+  }
+}
+
+function calcScores() {
+  const factors = { O: [0,0,0,0,0,0], C: [0,0,0,0,0,0], E: [0,0,0,0,0,0], A: [0,0,0,0,0,0], N: [0,0,0,0,0,0] };
+  const counts  = { O: [0,0,0,0,0,0], C: [0,0,0,0,0,0], E: [0,0,0,0,0,0], A: [0,0,0,0,0,0], N: [0,0,0,0,0,0] };
+
+  QUESTIONS.forEach((q, i) => {
+    const [, factor, sub, keyed] = q;
+    const raw = answers[i];
+    const score = keyed === 1 ? raw : (6 - raw);
+    factors[factor][sub - 1] += score;
+    counts[factor][sub - 1]++;
+  });
+
+  const result = {};
+  ['O','C','E','A','N'].forEach(f => {
+    let total = 0;
+    factors[f].forEach((sum, idx) => {
+      const avg = Math.round((sum / counts[f][idx]) * 20);
+      result[f + (idx + 1)] = avg;
+      total += avg;
+    });
+    result[f] = Math.round(total / 6);
+  });
+
+  return result;
+}
+
+function submitResults() {
+  showScreen('screen-sending');
+  const scores = calcScores();
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-AR') + ' ' + now.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+
+  const payload = {
+    fecha,
+    nombre: userData.nombre,
+    apellido: userData.apellido,
+    email: userData.email,
+    ...scores
+  };
+
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => showScreen('screen-final'))
+  .catch(() => showScreen('screen-final'));
+}
+</script>
+</body>
+</html>
