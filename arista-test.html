@@ -629,26 +629,26 @@ function nextPage() {
 }
 
 function calcScores() {
+  // Estilo bigfive (IPIP-NEO): suma cruda de respuestas, sin promediar ni reescalar.
+  // Por subfacet: 4 ítems × escala 1-5 → rango 4-20.
+  // Por dominio: suma de las 6 subfacets → rango 24-120.
   const factors = { O: [0,0,0,0,0,0], C: [0,0,0,0,0,0], E: [0,0,0,0,0,0], A: [0,0,0,0,0,0], N: [0,0,0,0,0,0] };
-  const counts  = { O: [0,0,0,0,0,0], C: [0,0,0,0,0,0], E: [0,0,0,0,0,0], A: [0,0,0,0,0,0], N: [0,0,0,0,0,0] };
 
   QUESTIONS.forEach((q, i) => {
     const [, factor, sub, keyed] = q;
     const raw = answers[i];
     const score = keyed === 1 ? raw : (6 - raw);
     factors[factor][sub - 1] += score;
-    counts[factor][sub - 1]++;
   });
 
   const result = {};
   ['O','C','E','A','N'].forEach(f => {
     let total = 0;
     factors[f].forEach((sum, idx) => {
-      const avg = Math.round((sum / counts[f][idx]) * 20);
-      result[f + (idx + 1)] = avg;
-      total += avg;
+      result[f + (idx + 1)] = sum; // subfacet: 4-20
+      total += sum;
     });
-    result[f] = Math.round(total / 6);
+    result[f] = total; // dominio: 24-120
   });
 
   return result;
